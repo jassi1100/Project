@@ -164,7 +164,7 @@ public class TechnicalComponents extends TestSetup {
 					} catch (Exception e) {
 
 					}
-					clear(element, desc);
+		//			clear(element, desc);
 					element.sendKeys(text);
 				} else {
 					if (driverWait > 0) {
@@ -2124,6 +2124,80 @@ public class TechnicalComponents extends TestSetup {
 		js.executeScript("arguments[0].setAttribute('style', 'border: 4px solid red;');", element);
 		js.executeScript("arguments[0].setAttribute('style','border: solid 4px white');", element);
 		js.executeScript("arguments[0].setAttribute('style','border: solid 0px white');", element);
+	}
+	
+	public String getEmailContent(String from, String subject) {
+		boolean emailFound = false;
+		String desc = "";
+		
+		try {
+			Properties properties = new Properties();
+			properties.put("mail.store.protocol", "imaps");
+			emailSession = Session.getDefaultInstance(properties);
+			store = emailSession.getStore("imaps");
+			store.connect(Utilities.getProperty("EMAIL_TO_HOST"),
+					Utilities.getProperty("EMAIL_TO_CUSTOMER_USERNAME"),
+					Utilities.getProperty("EMAIL_TO_CUSTOMER_PASSWORD"));
+
+			emailFolder = store.getFolder("INBOX");
+			emailFolder.open(Folder.READ_WRITE);
+			Message[] messages = emailFolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+			loggerForLogs.log(LogStatus.INFO, "Waiting for Email with Subject " + subject + "and sender " + from
+					+ "... Messages retrieved: " + messages.length + "---TimeOut: " + emailTimeOut);
+			if (messages.length > 0) {
+				for (int i = 0; i <= messages.length - 1; i++) {
+					Message message = messages[i];
+					loggerForLogs.log(LogStatus.INFO, "Email # " + i + "---Sender: " + message.getFrom()[0].toString()
+							+ "---Subject: " + message.getSubject());
+					if (message.getFrom()[0].toString().contains(from) && message.getSubject().contains(subject)) {
+						emailFound = true;
+						loggerForLogs.log(LogStatus.INFO, message.getContent().toString());
+						
+						desc = message.getContent().toString()
+								.replaceAll("(?s)<[^>]*>(\\s*<[^>]*>)*|\\r|\\n|&nbsp;", "").replace("amp;", "");
+						System.out.println(desc);
+						/*
+						 * if (emailFound) { desc = message.getContent().toString();
+						 * 
+						 * Pattern linkPattern = Pattern.compile("<a\\b[^>]*href=\"[^>]*>(.*?)</a>",
+						 * Pattern.CASE_INSENSITIVE | Pattern.DOTALL); Matcher pageMatcher =
+						 * linkPattern.matcher(desc);
+						 * 
+						 * while (pageMatcher.find()) { links.put( pageMatcher.group(1).toLowerCase()
+						 * .replaceAll("(?s)<[^>]*>(\\s*<[^>]*>)*|\\r|\\n|&nbsp;", "") .replace("amp;",
+						 * "").trim(), StringUtils.substringBetween(pageMatcher.group(0), "href=\"",
+						 * "\"")); } loggerForLogs.log(LogStatus.INFO, "Email verified successfully.");
+						 * }
+						 */
+					}
+				}
+			}
+
+			if (!emailFound)
+				if (emailTimeOut > 0) {
+					loggerForLogs.log(LogStatus.INFO, "Waiting for Email..." + emailTimeOut);
+					emailTimeOut -= 3;
+					store.close();
+					return getEmailContent(from, subject);
+				} else {
+					throw new FrameworkException("Email not found within defined limit.");
+				}
+		} catch (MessagingException | IOException | IllegalStateException e) {
+			if (!emailFound && emailTimeOut > 0) {
+				loggerForLogs.log(LogStatus.INFO, "Waiting for Email..." + emailTimeOut);
+				emailTimeOut -= 3;
+				try {
+					store.close();
+				} catch (MessagingException e1) {
+
+				}
+				return getEmailContent(from, subject);
+			} else {
+				throw new FrameworkException(
+						"Error encountered while verifying email.---" + e.getClass() + "---" + e.getMessage());
+			}
+		}
+		return desc;
 	}
 
 }

@@ -8,8 +8,7 @@ import com.relevantcodes.extentreports.ExtentTest;
 import com.relevantcodes.extentreports.LogStatus;
 
 import io.appium.java_client.remote.MobileCapabilityType;
-import objectrepository.API;
-import reusablecomponents.TechnicalComponents;
+
 import reusablecomponents.Utilities;
 
 import java.io.FileNotFoundException;
@@ -29,7 +28,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -65,8 +63,7 @@ public class TestSetup {
 	public static String[][] testCases, frenchMappings;
 	public boolean toBeTested = false;
 	public static boolean isMobile = false, isFrench = false, emailVerification = false, masValidation = false;
-	public static final String URL = "http://" + Utilities.getProperty("BS_USERNAME") + ":"
-			+ Utilities.getProperty("BS_AUTOMATEKEY") + "@hub-cloud.browserstack.com/wd/hub";
+	public static final String URL = "";
 	public static String runMode = "local";
 	public static String testDataLocation, paymentsFileLocation;
 	public static String testAPILocation;
@@ -86,10 +83,14 @@ public class TestSetup {
 	 */
 	@BeforeSuite
 	public void beforeSuite() throws FrameworkException, Throwable {
-
+		Utilities.setProperty("IMPLICIT_WAIT", "20");
+		Utilities.setProperty("EMAIL_TO_HOST", "smtp.gmail.com");
+		Utilities.setProperty("EMAIL_TO_CUSTOMER_USERNAME", "udin.caand@gmail.com");
+		Utilities.setProperty("EMAIL_TO_CUSTOMER_PASSWORD", "308Shamtower@");
 		if (System.getProperty("TestCategory") != null) {
-			System.setProperty("javax.net.ssl.trustStore", Utilities.getProperty("CERTIFICATES"));
-			System.setProperty("javax.net.ssl.trustStorePassword", Utilities.getProperty("PASS"));
+			System.setProperty("javax.net.ssl.trustStore", "");
+			System.setProperty("javax.net.ssl.trustStorePassword", "");
+			
 			runMode = "remote";
 			if (System.getProperty("suitexml").toLowerCase().contains("fail")) {
 				reportName = "Remote_" + System.getProperty("BrowserDevice") + "_SecondRun_";
@@ -101,35 +102,26 @@ public class TestSetup {
 			}
 		} else {
 			reportName = "LocalRun_";
-			if (Utilities.getProperty("LANGUAGE").toLowerCase().equals("french")) {
-				isFrench = true;
-			}
+			
 		}
 
 
 
 		testDataLocation = Utilities.getProperty("TEST_DATA_LOCATION");
 
-		if (Utilities.getProperty("EMAIL_VERIFICATION").equalsIgnoreCase("yes")) {
-			emailVerification = true;
-		}
-		if (Utilities.getProperty("MAS_VALIDATION").toLowerCase().equals("yes")) {
-			masValidation = true;
-		}
+		
 
-		testCases = Utilities.Read_Excel(testDataLocation, "TestCases");
+		//testCases = Utilities.Read_Excel(testDataLocation, "TestCases");
 
-		for (int i = 0; i < testCases.length; i++) {
-			testCasesToBeExecuted.put(testCases[i][1], testCases[i][2]);
-			testCaseBrowser.put(testCases[i][1], testCases[i][4]);
-			testCaseCategory.put(testCases[i][1], testCases[i][3]);
-		}
-		testCasesToBeExecuted.put("testPayments", "Yes");
-		testCaseBrowser.put("testPayments", "Chrome");
-		testCaseCategory.put("testPayments", "web");
-		testCasesToBeExecuted.put("LinkAccounts", "Yes");
-		testCaseBrowser.put("LinkAccounts", "Chrome");
-		testCaseCategory.put("LinkAccounts", "web");
+		/*
+		 * for (int i = 0; i < testCases.length; i++) {
+		 * testCasesToBeExecuted.put(testCases[i][1], testCases[i][2]);
+		 * testCaseBrowser.put(testCases[i][1], testCases[i][4]);
+		 * testCaseCategory.put(testCases[i][1], testCases[i][3]); }
+		 */
+		testCasesToBeExecuted.put("testFormDetails", "Yes");
+		testCaseBrowser.put("testFormDetails", "Chrome");
+		testCaseCategory.put("testFormDetails", "web");
 		reportName = Utilities.getCurrentDate().replace("/", "") + "/" + reportName
 				+ Utilities.getTimeStamp("local").replace("-", "").replace(":", "");
 		report = new ExtentReports("Reports/" + reportName + ".html");
@@ -137,7 +129,7 @@ public class TestSetup {
 		excelReport = "Reports/" + reportName + ".xlsx";
 		Utilities.setProperty("SCREENSHOTS_LOCATION_FOR_RUN", System.getProperty("user.dir") + "/Reports/"
 				+ Utilities.getCurrentDate().replace("/", "") + "/Screenshots/");
-		Mappings.setFrenchMappings();
+	//	Mappings.setFrenchMappings();
 		testCaseCount = 0;
 
 	}
@@ -157,7 +149,7 @@ public class TestSetup {
 		testName = method.getName();
 		logger = report.startTest(testName, "");
 		loggerForLogs = log.startTest(testName);
-		emailTimeOut = Long.parseLong(Utilities.getProperty("EMAIL_TIME_OUT"));
+		emailTimeOut = Long.parseLong("100");
 		testCaseName.put(testCaseCount, testName);
 
 		try {
@@ -399,8 +391,8 @@ public class TestSetup {
 			}
 		}
 		if (localDriver != null) {
-			timeOut = Long.parseLong(Utilities.getProperty("TIME_OUT_MEDIUM"));
-			driverWait = Long.parseLong(Utilities.getProperty("IMPLICIT_WAIT"));
+			timeOut = Long.parseLong("100");
+			driverWait = Long.parseLong("20");
 			// driver.manage().timeouts().implicitlyWait(driverWait,
 			// TimeUnit.SECONDS);
 			// logger.log(LogStatus.INFO, String.valueOf(TimeOut));
